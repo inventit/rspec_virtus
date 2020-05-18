@@ -5,7 +5,7 @@ require 'rspec/virtus/version'
 module RSpec
   module Virtus
     # rubocop:disable Style/PredicateName
-    def have_virtus_attribute(attribute_name)
+    def have_attribute(attribute_name)
       Matcher.new(attribute_name)
     end
   end
