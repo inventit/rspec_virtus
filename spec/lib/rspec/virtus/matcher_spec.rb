@@ -135,7 +135,7 @@ describe RSpec::Virtus::Matcher do
     end
 
     it 'adds an option to allow the default value to be checked' do
-      options_default_value = subject.instance_variable_get(:@options)[:default_value]
+      options_default_value = subject.instance_variable_get(:@options)[:default_value][:value]
       expect(options_default_value).to eql('My Default')
     end
   end

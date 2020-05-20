@@ -19,8 +19,8 @@ module RSpec
         self
       end
 
-      def with_default(default_value)
-        @options[:default_value] = default_value
+      def with_default(default_value, evaluate: false)
+        @options[:default_value] = {value: default_value, evaluate: evaluate}
         self
       end
 
@@ -79,9 +79,9 @@ module RSpec
 
         case value
         when ::Proc
-          value.call(@instance, attribute)
+          @options[:default_value][:evaluate] ? value.call(@instance, attribute) : :proc
         when ::Symbol
-          @instance.__send__(value)
+          @options[:default_value][:evaluate] && @instance.respond_to?(value, true) ? @instance.__send__(value) : value
         else
           value
         end
@@ -99,7 +99,7 @@ module RSpec
 
       def default_value_correct?
         return true unless @options[:default_value]
-        attribute_default_value == @options[:default_value]
+        attribute_default_value == @options[:default_value][:value]
       end
 
       def required?
