@@ -17,6 +17,9 @@ describe RSpec::Virtus::Matcher do
 
     attribute :the_attribute, String
     attribute :the_array_attribute, Array[String]
+    attribute :the_set_attribute, Set[Integer]
+    attribute :the_hash_attribute, Hash[String: String]
+    attribute :the_basic_object_attribute, OpenSSL::X509::Name
     attribute :the_integer_attribute_with_default, Integer, default: 5
     attribute :the_relational_attribute, DummyUser, relation: true
     attribute :the_string_attribute_with_lazy, String, lazy: true
@@ -48,6 +51,36 @@ describe RSpec::Virtus::Matcher do
 
       before do
         instance.of_type(Array[String])
+      end
+
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match on attribute name, type and member_type' do
+      let(:attribute_name) { :the_set_attribute }
+
+      before do
+        instance.of_type(Set[Integer])
+      end
+
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match on attribute name, type and member_type' do
+      let(:attribute_name) { :the_hash_attribute }
+
+      before do
+        instance.of_type(Hash[String: String])
+      end
+
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match on attribute name and type' do
+      let(:attribute_name) { :the_basic_object_attribute }
+
+      before do
+        instance.of_type(OpenSSL::X509::Name)
       end
 
       it { is_expected.to be_truthy }
@@ -146,6 +179,46 @@ describe RSpec::Virtus::Matcher do
 
       before do
         instance.of_type(Array[Integer])
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match on attribute name, type and member_type' do
+      let(:attribute_name) { :the_set_attribute }
+
+      before do
+        instance.of_type(Set[String])
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match on attribute name, type and key_type' do
+      let(:attribute_name) { :the_hash_attribute }
+
+      before do
+        instance.of_type(Hash[Integer: String])
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match on attribute name, type and value_type' do
+      let(:attribute_name) { :the_hash_attribute }
+
+      before do
+        instance.of_type(Hash[String: Integer])
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match on attribute name and type' do
+      let(:attribute_name) { :the_basic_object_attribute }
+
+      before do
+        instance.of_type(String)
       end
 
       it { is_expected.to be_falsey }
@@ -256,6 +329,35 @@ describe RSpec::Virtus::Matcher do
       it 'adds an option to allow the member_type to be checked' do
         member_options_type = subject.instance_variable_get(:@type).first
         expect(member_options_type).to eql(String)
+      end
+    end
+
+    context 'sets of values' do
+      subject { instance.of_type(Set[Integer]) }
+
+      it 'adds an option to allow the type to be checked' do
+        options_type = subject.instance_variable_get(:@type).class
+        expect(options_type).to eql(Set)
+      end
+
+      it 'adds an option to allow the member_type to be checked' do
+        member_options_type = subject.instance_variable_get(:@type).first
+        expect(member_options_type).to eql(Integer)
+      end
+    end
+
+    context 'hash of values' do
+      subject { instance.of_type(Hash[String: Integer]) }
+
+      it 'adds an option to allow the type to be checked' do
+        options_type = subject.instance_variable_get(:@type).class
+        expect(options_type).to eql(Hash)
+      end
+
+      it 'adds an option to allow the key_type to be checked' do
+        key_type, value_type = subject.instance_variable_get(:@type).first
+        expect(key_type).to eql(:String)
+        expect(value_type).to eql(Integer)
       end
     end
   end
