@@ -18,7 +18,8 @@ describe RSpec::Virtus::Matcher do
     attribute :the_attribute, String
     attribute :the_array_attribute, Array[String]
     attribute :the_integer_attribute_with_default, Integer, default: 5
-    attribute :the_relational_attribute_with_lazy, DummyUser, relation: true, lazy: true
+    attribute :the_relational_attribute, DummyUser, relation: true
+    attribute :the_string_attribute_with_lazy, String, lazy: true
     attribute :the_string_attribute_with_strict, String, strict: true, default: 'default value'
     attribute :the_string_attribute_with_nullify_blank, String, nullify_blank: true, default: ''
     attribute :the_string_attribute_with_unfinalize, String, finalize: false
@@ -68,10 +69,18 @@ describe RSpec::Virtus::Matcher do
       it { is_expected.to be_truthy }
     end
 
-    context 'successful match with type and relation and lazy' do
-      let(:attribute_name) { :the_relational_attribute_with_lazy }
+    context 'successful match with type and relation' do
+      let(:attribute_name) { :the_relational_attribute }
       before do
-        instance.of_type(DummyVirtus::DummyUser).with_options({ relation: true, lazy: true })
+        instance.of_type(DummyVirtus::DummyUser).with_options(relation: true)
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and lazy' do
+      let(:attribute_name) { :the_string_attribute_with_lazy }
+      before do
+        instance.of_type(String).with_options(lazy: true)
       end
       it { is_expected.to be_truthy }
     end
@@ -79,7 +88,7 @@ describe RSpec::Virtus::Matcher do
     context 'successful match with type and strict' do
       let(:attribute_name) { :the_string_attribute_with_strict }
       before do
-        instance.of_type(String).with_options({ strict: true })
+        instance.of_type(String).with_options(strict: true)
       end
       it { is_expected.to be_truthy }
     end
@@ -87,7 +96,7 @@ describe RSpec::Virtus::Matcher do
     context 'successful match with type and nullify_blank' do
       let(:attribute_name) { :the_string_attribute_with_nullify_blank }
       before do
-        instance.of_type(String).with_options({ nullify_blank: true })
+        instance.of_type(String).with_options(nullify_blank: true)
       end
       it { is_expected.to be_truthy }
     end
@@ -95,7 +104,7 @@ describe RSpec::Virtus::Matcher do
     context 'successful match with type and finalize' do
       let(:attribute_name) { :the_string_attribute_with_unfinalize }
       before do
-        instance.of_type(String).with_options( { finalize: false })
+        instance.of_type(String).with_options(finalize: false)
       end
       it { is_expected.to be_truthy }
     end
@@ -103,7 +112,7 @@ describe RSpec::Virtus::Matcher do
     context 'successful match with type and private_reader' do
       let(:attribute_name) { :the_string_attribute_with_private_reader }
       before do
-        instance.of_type(String).with_options({ reader: :private })
+        instance.of_type(String).with_options(reader: :private)
       end
       it { is_expected.to be_truthy }
     end
@@ -111,7 +120,7 @@ describe RSpec::Virtus::Matcher do
     context 'successful match with type and private_writer' do
       let(:attribute_name) { :the_string_attribute_with_private_writer }
       before do
-        instance.of_type(String).with_options({ writer: :private })
+        instance.of_type(String).with_options(writer: :private)
       end
       it { is_expected.to be_truthy }
     end
@@ -158,10 +167,19 @@ describe RSpec::Virtus::Matcher do
       it { is_expected.to be_falsey }
     end
 
-    context 'unsuccessful match with type and relation and lazy' do
-      let(:attribute_name) { :the_relational_attribute_with_lazy }
+    context 'unsuccessful match with type and relation' do
+      let(:attribute_name) { :the_relational_attribute }
       before do
-        instance.of_type(DummyVirtus::DummyUser).with_options({ relation: false, lazy: false })
+        instance.of_type(DummyVirtus::DummyUser).with_options(relation: false)
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and lazy' do
+      let(:attribute_name) { :the_string_attribute_with_lazy }
+      before do
+        instance.of_type(DummyVirtus::DummyUser).with_options(lazy: false)
       end
 
       it { is_expected.to be_falsey }
@@ -170,7 +188,7 @@ describe RSpec::Virtus::Matcher do
     context 'unsuccessful match with type and strict' do
       let(:attribute_name) { :the_string_attribute_with_strict }
       before do
-        instance.of_type(String).with_options({ strict: false })
+        instance.of_type(String).with_options(strict: false)
       end
 
       it { is_expected.to be_falsey }
@@ -179,7 +197,7 @@ describe RSpec::Virtus::Matcher do
     context 'unsuccessful match with type and nullify_blank' do
       let(:attribute_name) { :the_string_attribute_with_nullify_blank }
       before do
-        instance.of_type(String).with_options({ nullify_blank: false })
+        instance.of_type(String).with_options(nullify_blank: false)
       end
 
       it { is_expected.to be_falsey }
@@ -188,7 +206,7 @@ describe RSpec::Virtus::Matcher do
     context 'unsuccessful match with type and finalize' do
       let(:attribute_name) { :the_string_attribute_with_unfinalize }
       before do
-        instance.of_type(String).with_options({ finalize: true })
+        instance.of_type(String).with_options(finalize: true)
       end
 
       it { is_expected.to be_falsey }
@@ -197,7 +215,7 @@ describe RSpec::Virtus::Matcher do
     context 'unsuccessful match with type and private_reader' do
       let(:attribute_name) { :the_string_attribute_with_private_reader }
       before do
-        instance.of_type(String).with_options({ reader: :public })
+        instance.of_type(String).with_options(reader: :public)
       end
 
       it { is_expected.to be_falsey }
@@ -206,7 +224,7 @@ describe RSpec::Virtus::Matcher do
     context 'unsuccessful match with type and private_writer' do
       let(:attribute_name) { :the_string_attribute_with_private_writer }
       before do
-        instance.of_type(String).with_options({ writer: :public })
+        instance.of_type(String).with_options(writer: :public)
       end
 
       it { is_expected.to be_falsey }
