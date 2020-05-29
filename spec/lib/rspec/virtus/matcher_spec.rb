@@ -6,11 +6,24 @@ describe RSpec::Virtus::Matcher do
   let(:attribute_name) { :the_attribute }
 
   class DummyVirtus
+    class DummyUser
+      include Virtus.model(finalize: false)
+
+      attribute :the_relation_model_attribute, String
+      attribute :the_relation_model_attribute_with_finalize, Integer, finalize: true
+    end
+
     include Virtus.model
 
     attribute :the_attribute, String
     attribute :the_array_attribute, Array[String]
     attribute :the_integer_attribute_with_default, Integer, default: 5
+    attribute :the_relational_attribute_with_lazy, DummyUser, relation: true, lazy: true
+    attribute :the_string_attribute_with_strict, String, strict: true, default: 'default value'
+    attribute :the_string_attribute_with_nullify_blank, String, nullify_blank: true, default: ''
+    attribute :the_string_attribute_with_unfinalize, String, finalize: false
+    attribute :the_string_attribute_with_private_reader, String, reader: :private
+    attribute :the_string_attribute_with_private_writer, String, writer: :private
   end
 
   describe '#matches?' do
@@ -51,6 +64,54 @@ describe RSpec::Virtus::Matcher do
       let(:attribute_name) { :the_integer_attribute_with_default }
       before do
         instance.of_type(Integer).with_default(5)
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and relation and lazy' do
+      let(:attribute_name) { :the_relational_attribute_with_lazy }
+      before do
+        instance.of_type(DummyVirtus::DummyUser).with_options({ relation: true, lazy: true })
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and strict' do
+      let(:attribute_name) { :the_string_attribute_with_strict }
+      before do
+        instance.of_type(String).with_options({ strict: true })
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and nullify_blank' do
+      let(:attribute_name) { :the_string_attribute_with_nullify_blank }
+      before do
+        instance.of_type(String).with_options({ nullify_blank: true })
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and finalize' do
+      let(:attribute_name) { :the_string_attribute_with_unfinalize }
+      before do
+        instance.of_type(String).with_options( { finalize: false })
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and private_reader' do
+      let(:attribute_name) { :the_string_attribute_with_private_reader }
+      before do
+        instance.of_type(String).with_options({ reader: :private })
+      end
+      it { is_expected.to be_truthy }
+    end
+
+    context 'successful match with type and private_writer' do
+      let(:attribute_name) { :the_string_attribute_with_private_writer }
+      before do
+        instance.of_type(String).with_options({ writer: :private })
       end
       it { is_expected.to be_truthy }
     end
@@ -96,6 +157,60 @@ describe RSpec::Virtus::Matcher do
       end
       it { is_expected.to be_falsey }
     end
+
+    context 'unsuccessful match with type and relation and lazy' do
+      let(:attribute_name) { :the_relational_attribute_with_lazy }
+      before do
+        instance.of_type(DummyVirtus::DummyUser).with_options({ relation: false, lazy: false })
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and strict' do
+      let(:attribute_name) { :the_string_attribute_with_strict }
+      before do
+        instance.of_type(String).with_options({ strict: false })
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and nullify_blank' do
+      let(:attribute_name) { :the_string_attribute_with_nullify_blank }
+      before do
+        instance.of_type(String).with_options({ nullify_blank: false })
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and finalize' do
+      let(:attribute_name) { :the_string_attribute_with_unfinalize }
+      before do
+        instance.of_type(String).with_options({ finalize: true })
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and private_reader' do
+      let(:attribute_name) { :the_string_attribute_with_private_reader }
+      before do
+        instance.of_type(String).with_options({ reader: :public })
+      end
+
+      it { is_expected.to be_falsey }
+    end
+
+    context 'unsuccessful match with type and private_writer' do
+      let(:attribute_name) { :the_string_attribute_with_private_writer }
+      before do
+        instance.of_type(String).with_options({ writer: :public })
+      end
+
+      it { is_expected.to be_falsey }
+    end
   end
 
   describe '#of_type' do
@@ -107,7 +222,7 @@ describe RSpec::Virtus::Matcher do
 
     context 'singular values' do
       it 'adds an option to allow the type to be checked' do
-        options_type = subject.instance_variable_get(:@options)[:type]
+        options_type = subject.instance_variable_get(:@type)
         expect(options_type).to eql(String)
       end
     end
@@ -116,12 +231,12 @@ describe RSpec::Virtus::Matcher do
       subject { instance.of_type(Array[String]) }
 
       it 'adds an option to allow the type to be checked' do
-        options_type = subject.instance_variable_get(:@options)[:type].class
+        options_type = subject.instance_variable_get(:@type).class
         expect(options_type).to eql(Array)
       end
 
       it 'adds an option to allow the member_type to be checked' do
-        member_options_type = subject.instance_variable_get(:@options)[:type].first
+        member_options_type = subject.instance_variable_get(:@type).first
         expect(member_options_type).to eql(String)
       end
     end
@@ -135,7 +250,7 @@ describe RSpec::Virtus::Matcher do
     end
 
     it 'adds an option to allow the default value to be checked' do
-      options_default_value = subject.instance_variable_get(:@options)[:default_value][:value]
+      options_default_value = subject.instance_variable_get(:@default_value)[:value]
       expect(options_default_value).to eql('My Default')
     end
   end

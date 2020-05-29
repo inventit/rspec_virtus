@@ -3,57 +3,39 @@ module RSpec
     class Matcher
       def initialize(attribute_name)
         @attribute_name = attribute_name
-        @options = {}
       end
 
       def description
-        msg = "have attribute #{@attribute_name}"
-        msg << ", #{normalize_type}" if @options[:type]
-        msg << ", default: #{@options[:default_value]}" if @options[:default_value]
-        msg << ", required: #{@options[:required]}" unless @options[:required].nil?
-        msg
+        "have attribute #{@attribute_name}"
       end
 
       def of_type(type)
-        @options[:type] = type
+        @type = type
+        self
+      end
+
+      def with_options(options={})
+        @options = options.slice(:accessor, :reader, :writer, :lazy, :strict, :required, :finalize, :nullify_blank)
         self
       end
 
       def with_default(default_value, evaluate: false)
-        @options[:default_value] = {value: default_value, evaluate: evaluate}
-        self
-      end
-
-      def with_required(value)
-        @options[:required] = value
+        @default_value = {value: default_value, evaluate: evaluate}
         self
       end
 
       def matches?(instance)
         @instance = instance
         @subject = instance.class
-        @match_attribute_exists = attribute_exists?
-        return false unless @match_attribute_exists
-        @match_type_correct = type_correct?
-        @match_default_value_correct = default_value_correct?
-        @match_required_correct = required?
-        @match_attribute_exists && @match_type_correct && @match_default_value_correct && @match_required_correct
+        attribute_exists? && type_correct? && default_value_correct? && options_correct?
       end
 
       def failure_message
-        msg = ["expected #{@attribute_name} to be defined"]
-        msg << "have type #{normalize_type}" if @options.key?(:type) && !@match_type_correct
-        msg << 'have correct default value'  if @options.key?(:default_value) && !@match_default_value_correct
-        msg << 'have correct required flag'  if @options.key?(:required) && !@match_required_correct
-        msg.join(' and ')
+        "expected #{@attribute_name} to be defined"
       end
 
       def failure_message_when_negated
-        msg = ["expect #{@attribute_name} not to be defined"]
-        msg << "not have type #{normalize_type}" if @options.key?(:type)
-        msg << 'not have correct default value'  if @options.key?(:default_value)
-        msg << 'not have correct required flag'  if @options.key?(:required)
-        msg.join(' and ')
+        "expect #{@attribute_name} not to be defined"
       end
 
       private
@@ -79,40 +61,31 @@ module RSpec
 
         case value
         when ::Proc
-          @options[:default_value][:evaluate] ? value.call(@instance, attribute) : :proc
+          @default_value[:evaluate] ? value.call(@instance, attribute) : :proc
         when ::Symbol
-          @options[:default_value][:evaluate] && @instance.respond_to?(value, true) ? @instance.__send__(value) : value
+          @default_value[:evaluate] && @instance.respond_to?(value, true) ? @instance.__send__(value) : value
         else
           value
         end
       end
 
       def type_correct?
-        if @options[:type].is_a?(::Array)
-          attribute_type == @options[:type].class && member_type == @options[:type].first
-        elsif @options[:type]
-          attribute_type == @options[:type]
+        if @type.is_a?(::Array)
+          attribute_type == @type.class && member_type == @type.first
+        elsif @type
+          attribute_type == @type
         else
           true
         end
       end
 
       def default_value_correct?
-        return true unless @options[:default_value]
-        attribute_default_value == @options[:default_value][:value]
+        return true unless @default_value
+        attribute_default_value == @default_value[:value]
       end
 
-      def required?
-        return true if @options[:required].nil?
-        attribute.required? == @options[:required]
-      end
-
-      def normalize_type
-        if @options[:type].is_a?(::Array)
-          "#{@options[:type].class}[#{@options[:type].first}]"
-        else
-          @options[:type]
-        end
+      def options_correct?
+        @options.nil? || @options.empty? || @options.all? { |name, value| attribute.options[name] == value }
       end
     end
   end
