@@ -15,7 +15,7 @@ module RSpec
       end
 
       def with_options(options={})
-        @options = options.slice(:accessor, :reader, :writer, :lazy, :strict, :required, :finalize, :nullify_blank)
+        @options = options.slice(:accessor, :reader, :writer, :relation, :lazy, :strict, :required, :finalize, :nullify_blank)
         self
       end
 
