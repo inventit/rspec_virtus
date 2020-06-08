@@ -14,6 +14,9 @@ class DummyPost
   attribute :title, String, strict: true, default: 'First Post'
   attribute :body, String, nullify_blank: true, default: ''
   attribute :comments, Array[String]
+  attribute :set_integer, Set[Integer]
+  attribute :hash_string, Hash[String: Integer]
+  attribute :basic_object, OpenSSL::X509::Name
   attribute :greeting, String, default: 'Hello!'
   attribute :default_lambda, String, default: ->(_, _) { 'Wow!' }
   attribute :customs, String, default: :custom_default_via_method
@@ -36,6 +39,9 @@ describe DummyPost do
   it { is_expected.to have_attribute(:title).with_options(strict: true) }
   it { is_expected.to have_attribute(:body).of_type(String).with_options(nullify_blank: true) }
   it { is_expected.to have_attribute(:comments).of_type(Array[String]) }
+  it { is_expected.to have_attribute(:set_integer).of_type(Set[Integer]) }
+  it { is_expected.to have_attribute(:hash_string).of_type(Hash[String: Integer]) }
+  it { is_expected.to have_attribute(:basic_object).of_type(OpenSSL::X509::Name) }
   it { is_expected.to have_attribute(:greeting).of_type(String).with_default('Hello!') }
   it { is_expected.to have_attribute(:default_lambda).of_type(String).with_default('Wow!', evaluate: true) }
   it { is_expected.to have_attribute(:default_lambda).of_type(String).with_default(:proc) }

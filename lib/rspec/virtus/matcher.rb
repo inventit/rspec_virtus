@@ -70,13 +70,39 @@ module RSpec
       end
 
       def type_correct?
-        if @type.is_a?(::Array)
-          attribute_type == @type.class && member_type == @type.first
-        elsif @type
-          attribute_type == @type
+        @type.nil? || correct_type?(@type, attribute)
+      end
+
+      def correct_type?(expected, actual)
+        case expected
+        when ::Array, ::Set
+          actual.is_a?(::Virtus::Attribute::Collection) \
+            && actual.primitive == expected.class \
+            && correct_type?(expected.first, actual.member_type)
+        when ::Hash
+          key_type, value_type = expected.first
+          actual.is_a?(::Virtus::Attribute::Hash) \
+            && actual.primitive == Hash \
+            && correct_type?(key_type, actual.key_type) \
+            && correct_type?(value_type, actual.value_type)
         else
-          true
+          normalized = \
+            (expected.is_a?(String) || expected.is_a?(Symbol)) && Object.const_get(expected.to_s) || expected
+          type_definition = ::Virtus::TypeDefinition.new(normalized)
+          detected_class = \
+            ::Virtus::Attribute::Builder.determine_type(type_definition.primitive, ::Virtus::Attribute)
+          detected_type = detected_class.build_type(type_definition)
+          actual.instance_of?(normalized) \
+            || normalized == actual.primitive \
+            || actual.instance_of?(detected_class) && actual.type == detected_type(expected)
         end
+      end
+
+      def detected_type(klass)
+        type_definition = ::Virtus::TypeDefinition.new(klass)
+        ::Virtus::Attribute::Builder \
+          .determine_type(type_definition.primitive, ::Virtus::Attribute) \
+          .build_type(type_definition)
       end
 
       def default_value_correct?
