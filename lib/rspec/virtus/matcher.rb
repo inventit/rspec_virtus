@@ -100,7 +100,8 @@ module RSpec
 
       def detected_type(klass)
         type_definition = ::Virtus::TypeDefinition.new(klass)
-        ::Virtus::Attribute::Builder.determine_type(type_definition.primitive, ::Virtus::Attribute) \
+        ::Virtus::Attribute::Builder \
+          .determine_type(type_definition.primitive, ::Virtus::Attribute) \
           .build_type(type_definition)
       end
 
